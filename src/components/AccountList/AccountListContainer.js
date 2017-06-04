@@ -2,9 +2,12 @@ import React, { Component } from 'react'
 import AccountList from 'components/AccountList/AccountList'
 import SendCoin from 'components/SendCoin/SendCoin'
 
-import MetaCoin from 'contracts/MetaCoin.sol';
+import MetaCoinArtifact from 'contracts/MetaCoin.sol';
 import Web3 from 'web3';
+import contract from 'truffle-contract';
 
+
+const MetaCoin = contract(MetaCoinArtifact);
 
 class AccountListContainer extends Component {
   constructor(props) {
@@ -19,24 +22,25 @@ class AccountListContainer extends Component {
     this._getAccountBalances = this._getAccountBalances.bind(this)
   }
 
-  componentWillMount(){
-    MetaCoin.setProvider(this.props.web3.currentProvider);    
+  componentWillMount() {
+    MetaCoin.setProvider(this.props.web3.currentProvider);
   }
 
-  _getAccountBalance (account) {
-    var meta = MetaCoin.deployed()
-    return new Promise((resolve, reject) => {
-      meta.getBalance.call(account, {from: account}).then(function (value) {
-        resolve({ account: value.valueOf() })
-      }).catch(function (e) {
-        console.log(e)
-        reject()
-      })
-    })
+  _getAccountBalance(account) {
+    return MetaCoin.deployed().then(function(meta) {
+      return meta.getBalance.call(account, {
+        from: account
+      }).then(function(value) {
+        return value.valueOf();
+      }
+      )
+    }).catch(function(e) {
+      console.log(e);
+    });
   }
 
-  _getAccountBalances () {
-    this.props.web3.eth.getAccounts(function (err, accs) {
+  _getAccountBalances() {
+    this.props.web3.eth.getAccounts(function(err, accs) {
       if (err != null) {
         window.alert('There was an error fetching your accounts.')
         console.error(err)
@@ -48,14 +52,24 @@ class AccountListContainer extends Component {
         return
       }
 
-      this.setState({coinbase: accs[0]})
+      this.setState({
+        coinbase: accs[0]
+      })
 
       var accountsAndBalances = accs.map((account) => {
-        return this._getAccountBalance(account).then((balance) => { return { account, balance } })
+        return this._getAccountBalance(account).then((balance) => {
+          return {
+            account,
+            balance
+          }
+        })
       })
 
       Promise.all(accountsAndBalances).then((accountsAndBalances) => {
-        this.setState({accounts: accountsAndBalances, coinbaseAccount: accountsAndBalances[0]})
+        this.setState({
+          accounts: accountsAndBalances,
+          coinbaseAccount: accountsAndBalances[0]
+        })
       })
     }.bind(this))
   }
@@ -67,7 +81,7 @@ class AccountListContainer extends Component {
 
     refreshBalances()
 
-    setInterval(()=>{
+    setInterval(() => {
       refreshBalances();
       return refreshBalances
     }, 5000)

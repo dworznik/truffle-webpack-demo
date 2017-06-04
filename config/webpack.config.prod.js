@@ -79,7 +79,7 @@ module.exports = {
       },
       {
         test: /\.sol/,
-        loader: 'truffle-solidity'
+        loaders: ['json-loader', 'truffle-solidity-loader?network=development']
       }
     ]
   },
